@@ -52,5 +52,38 @@ outputs = [".build-tests/agc2_test"]
 cmd = ".build-tests/agc2_test"
 depends-on = ["build-test"]
 
+# Emscripten is not provided by pixi: conda-forge's emscripten package ships an
+# incompatible binaryen version. Activate an emsdk installation (so that
+# `emcc`/`emcmake` are on PATH) before running the wasm tasks.
+[feature.wasm.dependencies]
+nodejs = ">=22,<27"
+
+[feature.wasm.tasks.configure-wasm]
+cmd = [
+    "emcmake",
+    "cmake",
+    "-GNinja",
+    "-S.",
+    "-B.build-wasm",
+    "-DCMAKE_BUILD_TYPE=Release",
+]
+inputs = ["CMakeLists.txt"]
+outputs = [".build-wasm/CMakeFiles/"]
+
+[feature.wasm.tasks.build-wasm]
+cmd = ["cmake", "--build", ".build-wasm"]
+depends-on = ["configure-wasm"]
+inputs = ["CMakeLists.txt", "src/*", "wasm/*"]
+outputs = [
+    ".build-wasm/agc2_wasm.mjs",
+    ".build-wasm/agc2_wasm.wasm",
+]
+
+[feature.wasm.tasks.run-test-wasm]
+cmd = ["node", "tests/agc2_wasm_test.mjs"]
+depends-on = ["build-wasm"]
+inputs = ["tests/agc2_wasm_test.mjs", "wasm/*"]
+
 [environments]
 build = ["build"]
+wasm = ["wasm"]

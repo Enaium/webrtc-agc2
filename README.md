@@ -15,6 +15,8 @@ layout of the sibling [AEC3](../aec3) extraction.
 * The APM glue the module needs: `AudioBuffer`, `ChannelBuffer`, the capture
   mixer, the splitting filter, the resampler, `ApmDataDumper` and the field
   trial parser (`rtc_base/experiments/field_trial_parser`).
+* A JS/WASM target (`wasm/`) exposing the module to JavaScript through a small
+  C API (`wasm/agc2_wasm.cc`) and an ES module wrapper (`wasm/agc2.mjs`).
 
 ## Build
 
@@ -50,6 +52,52 @@ The test synthesizes its input signals and exercises four scenarios:
    ramps back down when the speech level rises).
 4. `VoiceActivityDetectorWrapper` (the RNN VAD weights are loaded and inference
    separates speech-like audio from silence).
+
+## JS / WebAssembly
+
+The `wasm` environment builds `libwebrtc_agc2.a` and the ES module
+`agc2_wasm.mjs` + `agc2_wasm.wasm` in `.build-wasm/`:
+
+```bash
+source /path/to/emsdk/emsdk_env.sh   # emcc/emcmake must be on PATH
+pixi run -e wasm configure-wasm
+pixi run -e wasm build-wasm
+pixi run -e wasm run-test-wasm       # Node test, 5 scenarios
+```
+
+pixi provides Node.js for the wasm environment; Emscripten is taken from an
+[emsdk](https://emscripten.org/docs/getting_started/downloads.html)
+installation (conda-forge's `emscripten` package ships an incompatible
+binaryen, so it is not used).
+
+### JavaScript API
+
+```js
+import createAgc2Module from "./.build-wasm/agc2_wasm.mjs";
+import { createAgc2 } from "./wasm/agc2.mjs";
+
+const agc2 = await createAgc2(createAgc2Module, {
+  sampleRateHz: 16000,
+  numChannels: 1,
+  enableAdaptiveDigital: true,
+  enableInputVolumeController: false,
+  fixedGainDb: 0,
+  useInternalVad: true,
+});
+
+// One 10 ms frame of interleaved FloatS16 audio ([-32768, 32768]).
+const frame = new Float32Array(agc2.frameSize * agc2.numChannels);
+// ... fill `frame` ...
+agc2.process(frame, { appliedInputVolume: 255, inputVolumeChanged: false });
+console.log(agc2.recommendedInputVolume());  // number | null
+agc2.setFixedGainDb(20);
+agc2.free();
+```
+
+The wasm test (`tests/agc2_wasm_test.mjs`, run with Node) exercises the same
+pipeline as the native test: fixed digital gain and limiter, input volume
+controller, adaptive digital gain with the internal VAD, stereo channel
+separation and silence handling.
 
 ## Usage
 
