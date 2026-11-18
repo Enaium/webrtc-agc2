@@ -2,7 +2,7 @@
 
 A standalone extraction of the WebRTC Automatic Gain Control 2 (AGC2) module.
 
-Extracted from `webrtc/src` at commit `3406fde1d1` (2026-11-17), following the
+Extracted from `webrtc/src` at commit `c25c6676c6` (2026-11-18), following the
 layout of the sibling [AEC3](../aec3) extraction.
 
 ## Contents
@@ -100,7 +100,7 @@ Deviations from the WebRTC sources:
   `NoDestructor`, `c_fill`, `StartsWith`/`EndsWith`, `absl_nonnull`/
   `absl_nullable`).
 * `third_party/pffft` and `third_party/rnnoise` are not part of the WebRTC git
-  repository; they are vendored from Chromium revision `08c193172d` (the
+  repository; they are vendored from Chromium revision `9cab2dfec8` (the
   revision pinned by WebRTC's `DEPS`).
 * Test-only files (`*_unittest.cc`, `agc2_testing_common.*`,
   `compute_interpolated_gain_curve.*`, `limiter_db_gain_curve.*`,
