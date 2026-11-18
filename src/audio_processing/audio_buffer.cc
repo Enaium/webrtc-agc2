@@ -71,7 +71,13 @@ AudioBuffer::AudioBuffer(
     size_t output_rate,
     AudioProcessing::Config::Pipeline::DownmixMethod downmix_method,
     AudioProcessing::Config::Pipeline::DownmixMethod downmix_method_stereo)
-    : downmix_method_(downmix_method),
+    : downmix_method_(input_num_channels != 2 &&
+                              downmix_method ==
+                                  AudioProcessing::Config::Pipeline::
+                                      DownmixMethod::kAdaptive
+                          ? AudioProcessing::Config::Pipeline::DownmixMethod::
+                                kAverageChannels
+                          : downmix_method),
       downmix_method_stereo_(downmix_method_stereo),
       input_num_frames_(static_cast<int>(input_rate) / 100),
       input_num_channels_(input_num_channels),
@@ -89,7 +95,7 @@ AudioBuffer::AudioBuffer(
       data_(new ChannelBuffer<float>(buffer_num_frames_,
                                      buffer_internal_num_channels_)),
       downmix_by_averaging_(
-          downmix_method ==
+          downmix_method_ ==
           AudioProcessing::Config::Pipeline::DownmixMethod::kAverageChannels),
       channel_for_downmixing_(0),
       capture_mixer_(buffer_num_frames_) {
@@ -119,7 +125,7 @@ AudioBuffer::AudioBuffer(
   }
 
   if (output_resampling_needed) {
-    for (size_t i = 0; i < buffer_internal_num_channels_; ++i) {
+    for (size_t i = 0; i < buffer_num_channels_; ++i) {
       output_resamplers_.push_back(std::unique_ptr<PushSincResampler>(
           new PushSincResampler(buffer_num_frames_, output_num_frames_)));
     }
@@ -127,9 +133,9 @@ AudioBuffer::AudioBuffer(
 
   if (num_bands_ > 1) {
     split_data_.reset(new ChannelBuffer<float>(
-        buffer_num_frames_, buffer_internal_num_channels_, num_bands_));
+        buffer_num_frames_, buffer_num_channels_, num_bands_));
     splitting_filter_.reset(new SplittingFilter(
-        buffer_internal_num_channels_, num_bands_, buffer_num_frames_));
+        buffer_num_channels_, num_bands_, buffer_num_frames_));
   }
 }
 
@@ -144,10 +150,12 @@ void AudioBuffer::CopyFrom(const float* const* stacked_data,
   const bool resampling_needed = input_num_frames_ != buffer_num_frames_;
 
   const bool use_adaptive_downmixing =
-      (downmix_method_ ==
-           AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive ||
-       downmix_method_stereo_ ==
-           AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive) &&
+      ((buffer_num_channels_ == 1 &&
+        downmix_method_ ==
+            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive) ||
+       (buffer_num_channels_ == 2 &&
+        downmix_method_stereo_ ==
+            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive)) &&
       buffer_internal_num_channels_ == 2;
   if (use_adaptive_downmixing) {
     if (resampling_needed) {
@@ -293,12 +301,13 @@ void AudioBuffer::CopyFrom(const int16_t* const interleaved_data,
   const int16_t* interleaved = interleaved_data;
 
   const bool use_adaptive_downmixing =
-      ((downmix_method_ ==
-            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive ||
+      ((buffer_num_channels_ == 1 &&
+        downmix_method_ ==
+            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive) ||
+       (buffer_num_channels_ == 2 &&
         downmix_method_stereo_ ==
-            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive) &&
-       input_num_channels_ == 2);
-  RTC_DCHECK(!use_adaptive_downmixing || buffer_internal_num_channels_ == 2);
+            AudioProcessing::Config::Pipeline::DownmixMethod::kAdaptive)) &&
+      buffer_internal_num_channels_ == 2;
 
   if (use_adaptive_downmixing) {
     auto deinterleave_channel = [](size_t channel, size_t num_channels,

@@ -2,7 +2,7 @@
 
 A standalone extraction of the WebRTC Automatic Gain Control 2 (AGC2) module.
 
-Extracted from `webrtc/src` at commit `d8c5a46d99` (2026-09-15), following the
+Extracted from `webrtc/src` at commit `3406fde1d1` (2026-11-17), following the
 layout of the sibling [AEC3](../aec3) extraction.
 
 ## Contents
@@ -13,7 +13,8 @@ layout of the sibling [AEC3](../aec3) extraction.
 * The AGC2 sub-modules (`audio_processing/agc2/`), including the RNN-based
   voice activity detector (`audio_processing/agc2/rnn_vad/`).
 * The APM glue the module needs: `AudioBuffer`, `ChannelBuffer`, the capture
-  mixer, the splitting filter, the resampler and `ApmDataDumper`.
+  mixer, the splitting filter, the resampler, `ApmDataDumper` and the field
+  trial parser (`rtc_base/experiments/field_trial_parser`).
 
 ## Build
 
@@ -99,7 +100,7 @@ Deviations from the WebRTC sources:
   `NoDestructor`, `c_fill`, `StartsWith`/`EndsWith`, `absl_nonnull`/
   `absl_nullable`).
 * `third_party/pffft` and `third_party/rnnoise` are not part of the WebRTC git
-  repository; they are vendored from Chromium revision `df36763e683a` (the
+  repository; they are vendored from Chromium revision `08c193172d` (the
   revision pinned by WebRTC's `DEPS`).
 * Test-only files (`*_unittest.cc`, `agc2_testing_common.*`,
   `compute_interpolated_gain_curve.*`, `limiter_db_gain_curve.*`,

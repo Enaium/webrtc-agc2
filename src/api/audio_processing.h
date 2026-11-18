@@ -50,7 +50,7 @@ class AudioProcessing {
       // needed).
       DownmixMethod capture_downmix_method = DownmixMethod::kAverageChannels;
       DownmixMethod capture_downmix_method_stereo_aec =
-          DownmixMethod::kAverageChannels;
+          DownmixMethod::kAdaptive;
     } pipeline;
 
     // Enables automatic gain control (AGC) functionality.
