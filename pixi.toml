@@ -82,7 +82,20 @@ outputs = [
 [feature.wasm.tasks.run-test-wasm]
 cmd = ["node", "tests/agc2_wasm_test.mjs"]
 depends-on = ["build-wasm"]
-inputs = ["tests/agc2_wasm_test.mjs", "wasm/*"]
+
+[feature.wasm.tasks.pack-npm]
+cmd = ["node", "npm/stage.mjs"]
+depends-on = ["build-wasm"]
+inputs = ["npm/*", "wasm/agc2.mjs", "LICENSE"]
+outputs = [".build-npm/package.json"]
+
+[feature.wasm.tasks.run-test-npm]
+cmd = ["node", "npm/package-test.mjs"]
+depends-on = ["pack-npm"]
+
+[feature.wasm.tasks.publish-npm]
+cmd = ["node", "npm/publish.mjs"]
+depends-on = ["pack-npm"]
 
 [environments]
 build = ["build"]

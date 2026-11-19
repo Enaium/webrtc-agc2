@@ -1,0 +1,48 @@
+name: Publish npm
+
+"on":
+  workflow_dispatch:
+
+# Builds the WebAssembly target and publishes the @enaium/webrtc-agc2 npm
+# package.
+#
+# The published version is the one in npm/package.json; bump it before running
+# the workflow (npm rejects publishing an existing version).
+#
+# Required repository secret (Settings -> Secrets and variables -> Actions):
+#   NPM_PUBLISH_KEY   npm automation token with publish rights for the scope
+
+jobs:
+  publish-npm:
+    name: Publish @enaium/webrtc-agc2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.11.3
+        with:
+          environments: wasm
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+          "$HOME/emsdk/emsdk" install latest
+          "$HOME/emsdk/emsdk" activate latest
+
+      - name: Build the WebAssembly target
+        run: |
+          source "$HOME/emsdk/emsdk_env.sh"
+          pixi run -e wasm build-wasm
+
+      - name: Stage the npm package
+        run: pixi run -e wasm pack-npm
+
+      - name: Test the staged package
+        run: pixi run -e wasm run-test-npm
+
+      - name: Publish the npm package
+        env:
+          NPM_PUBLISH_KEY: ${{ secrets.NPM_PUBLISH_KEY }}
+        run: pixi run -e wasm publish-npm

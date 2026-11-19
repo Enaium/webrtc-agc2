@@ -1,0 +1,41 @@
+{
+  "name": "@enaium/webrtc-agc2",
+  "version": "0.1.0",
+  "description": "WebRTC AGC2 (Automatic Gain Control 2) compiled to WebAssembly",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs",
+    "./agc2.mjs": "./agc2.mjs",
+    "./agc2_wasm.mjs": "./agc2_wasm.mjs",
+    "./agc2_wasm.wasm": "./agc2_wasm.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "agc2.mjs",
+    "agc2_wasm.mjs",
+    "agc2_wasm.wasm",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "webrtc",
+    "agc2",
+    "agc",
+    "gain-control",
+    "audio",
+    "wasm",
+    "webassembly",
+    "emscripten"
+  ],
+  "homepage": "https://github.com/Enaium/webrtc-agc2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Enaium/webrtc-agc2.git"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

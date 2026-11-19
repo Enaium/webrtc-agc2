@@ -99,6 +99,32 @@ pipeline as the native test: fixed digital gain and limiter, input volume
 controller, adaptive digital gain with the internal VAD, stereo channel
 separation and silence handling.
 
+### npm package
+
+`npm/` turns the wasm artifacts, the JS wrapper and a package entry point
+(`npm/index.mjs`, which binds the bundled module factory) into the
+`@enaium/webrtc-agc2` package:
+
+```bash
+pixi run -e wasm pack-npm       # stages the package in .build-npm/
+pixi run -e wasm run-test-npm   # smoke test of the staged package
+NPM_PUBLISH_KEY=<token> pixi run -e wasm publish-npm        # add --dry-run to inspect
+```
+
+The published version is the one in `npm/package.json`; `publish.mjs` reads the
+token from `NPM_PUBLISH_KEY` (or `NODE_AUTH_TOKEN`) and writes it to a `.npmrc`
+in the staging directory, which npm never includes in the tarball.
+`.github/workflows/publish-npm.yml` runs the same steps on a manual workflow
+dispatch and publishes with the `NPM_PUBLISH_KEY` repository secret.
+
+Consumers use the installed package directly:
+
+```js
+import { createAgc2 } from "@enaium/webrtc-agc2";
+
+const agc2 = await createAgc2({ sampleRateHz: 16000, enableAdaptiveDigital: true });
+```
+
 ## Usage
 
 ```cpp
